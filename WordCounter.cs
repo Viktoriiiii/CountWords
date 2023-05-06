@@ -38,10 +38,10 @@ namespace CountWords
 
             //ConcurrentDictionary<string, string> dictionaryContent = GetContentAsync(files).Result;
             ConcurrentDictionary<string, string> dictionaryContent = GetContentParallel(files);
-            Console.WriteLine($"Завершено");
+            Console.WriteLine($"Завершено считывание файлов");
 
             ConcurrentDictionary<string, string[]> dictionaryWords = GetCDWithWordsParallel(dictionaryContent);
-            Console.WriteLine($"Завершено");
+            Console.WriteLine($"Завершена обработка контента (удаление лишних символов и разделение на слова)");
 
             RecordInDictionaryParallel(dictionaryWords);
         }
@@ -125,7 +125,7 @@ namespace CountWords
                 Dictionary<string, int> sorted = cd.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
                 WriteWordsInFile(sorted, name);
             }
-            Console.WriteLine(count);
+            Console.WriteLine("Завершено добавление в словарь и вывод в файлы");
         }
 
         private void WriteWordsInFile<T>(T dict, string nameFile)
