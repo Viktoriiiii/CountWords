@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace CountWords
 {
@@ -38,26 +36,42 @@ namespace CountWords
             DirectoryInfo directoryInfo = new DirectoryInfo(path);
             FileInfo[] files = directoryInfo.GetFiles("*.txt", SearchOption.AllDirectories);
 
-            ConcurrentDictionary<string, string> dictionaryContent = GetContent(files);
+            //ConcurrentDictionary<string, string> dictionaryContent = GetContentAsync(files).Result;
+            ConcurrentDictionary<string, string> dictionaryContent = GetContentParallel(files);
+            Console.WriteLine($"Завершено");
 
-            ConcurrentDictionary<string, string[]> dictionaryWords = GetCDWithWords(dictionaryContent);
+            ConcurrentDictionary<string, string[]> dictionaryWords = GetCDWithWordsParallel(dictionaryContent);
+            Console.WriteLine($"Завершено");
+
+            RecordInDictionaryParallel(dictionaryWords);
         }
 
-        private ConcurrentDictionary<string, string> GetContent(FileInfo[] files)
+        private async Task<ConcurrentDictionary<string, string>> GetContentAsync(FileInfo[] files)
         {
             var cd = new ConcurrentDictionary<string, string>();
             foreach (var file in files)
             {
-                string fileContent = File.ReadAllText(file.FullName);
+                string fileContent = await File.ReadAllTextAsync(file.FullName);
                 cd.TryAdd(file.Name, fileContent);
             }
             return cd;
         }
 
-        private ConcurrentDictionary<string, string[]> GetCDWithWords(ConcurrentDictionary<string, string> cd)
+        private ConcurrentDictionary<string, string> GetContentParallel(FileInfo[] files)
+        {
+            var cd = new ConcurrentDictionary<string, string>();
+            Parallel.ForEach(files, (file) =>
+            {
+                string fileContent = File.ReadAllText(file.FullName);
+                cd.TryAdd(file.Name, fileContent);
+            });
+            return cd;
+        }
+
+        private ConcurrentDictionary<string, string[]> GetCDWithWordsParallel(ConcurrentDictionary<string, string> cd)
         {
             var cdWithWords = new ConcurrentDictionary<string, string[]>();
-            foreach(var d in cd)
+            Parallel.ForEach(cd, (d) =>
             {
                 StringBuilder sb = new StringBuilder(d.Value);
                 sb = new StringBuilder(sb.ToString().ToLower());
@@ -65,11 +79,69 @@ namespace CountWords
                 sb = new StringBuilder(System.Text.RegularExpressions.Regex.Replace(sb.ToString(), @"\s+", " "));
                 string[] words = sb.ToString().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 cdWithWords.TryAdd(d.Key, words);
-            }
+            });
             return cdWithWords;
         }
 
+        private void RecordInDictionaryParallel(ConcurrentDictionary<string, string[]> dw)
+        {
+            ConcurrentDictionary<string, int> cd = new ConcurrentDictionary<string, int>();
+            string name = flagForPreposition ? "result-with-preposition.txt" : "result-without-preposition.txt";
 
+            int count = 0;
+            
+            foreach (var dictionary in dw)
+            {
+                if (flagOtherFiles)
+                    cd.Clear();
 
+                foreach (var word in dictionary.Value)
+                {
+                    if (!flagForPreposition)
+                    {
+                        if (prepositions.Contains(word))
+                            continue;
+                    }
+                    if (cd.TryGetValue(word, out int c))
+                        cd[word] = c + 1;
+                    else
+                        cd.TryAdd(word, 1);
+                }
+
+                if (flagOtherFiles)
+                {
+                    Dictionary<string, int> sortedForOtherFies = cd.OrderByDescending(x => x.Value)
+                        .ToDictionary(x => x.Key, x => x.Value);
+                    var filesWithWords = new Dictionary<string, Dictionary<string, int>>
+                    {
+                        { dictionary.Key, sortedForOtherFies }
+                    };
+                    WriteWordsInFile(filesWithWords, $"{name}-{count}-{dictionary.Key}");
+                    count++;
+                }
+            }
+            if (!flagOtherFiles)
+            {
+                Dictionary<string, int> sorted = cd.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                WriteWordsInFile(sorted, name);
+            }
+            Console.WriteLine(count);
+        }
+
+        private void WriteWordsInFile<T>(T dict, string nameFile)
+        {
+            string path = Path.Combine(Environment.CurrentDirectory, "Result");
+            DirectoryInfo directoryInfo = new DirectoryInfo(path);
+            if (!directoryInfo.Exists)
+                directoryInfo.Create();
+
+            var options = new JsonSerializerOptions
+            {
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = false
+            };
+
+            File.WriteAllText(Path.Combine(path, nameFile), JsonSerializer.Serialize(dict, options));
+        }
     }
 }
