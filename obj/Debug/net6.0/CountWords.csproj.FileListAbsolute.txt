@@ -1,0 +1,15 @@
+D:\AleKoN\CountWords\bin\Debug\net6.0\CountWords.exe
+D:\AleKoN\CountWords\bin\Debug\net6.0\CountWords.deps.json
+D:\AleKoN\CountWords\bin\Debug\net6.0\CountWords.runtimeconfig.json
+D:\AleKoN\CountWords\bin\Debug\net6.0\CountWords.dll
+D:\AleKoN\CountWords\bin\Debug\net6.0\CountWords.pdb
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.csproj.AssemblyReference.cache
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.GeneratedMSBuildEditorConfig.editorconfig
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.AssemblyInfoInputs.cache
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.AssemblyInfo.cs
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.csproj.CoreCompileInputs.cache
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.dll
+D:\AleKoN\CountWords\obj\Debug\net6.0\refint\CountWords.dll
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.pdb
+D:\AleKoN\CountWords\obj\Debug\net6.0\CountWords.genruntimeconfig.cache
+D:\AleKoN\CountWords\obj\Debug\net6.0\ref\CountWords.dll
